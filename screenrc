@@ -1,0 +1,10 @@
+defencoding UTF8
+escape ^z^z
+#hardstatus alwayslastline "[%02c] %`%-w%{=b bw}%n %t%{-}%+w"
+hardstatus alwayslastline "%w | %h"
+
+autodetach on
+bind ^U eval "encoding utf8" "stuff 'export LANG=ja_JP.UTF-8¥012'"
+bind ^E eval "encoding euc" "stuff 'export LANG=ja_JP.EUC-JP¥012'"
+bind ^J eval "encoding sjis" "stuff 'export LANG=ja_JP.SJIS¥012'"
+

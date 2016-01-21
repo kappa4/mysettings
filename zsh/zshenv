@@ -1,0 +1,6 @@
+export LANG=ja_JP.UTF-8
+export SHELL=/opt/zsh/bin/zsh
+
+export MERB_ENV=takahashi
+export __CF_USER_TEXT_ENCODING=501:1:14
+

@@ -1,0 +1,35 @@
+require File.join(File.dirname(__FILE__), '..', 'spec_helper.rb')
+
+describe Ads, 'connecting database' do
+  before(:each) do
+    DataMapper.setup(:default, {
+                       :adapter => 'mysql',
+                       :database => 'intl_prototype',
+                       :username => 'advocal',
+                       :password => 'advocal',
+                       :host => 'adl-proto-misc01'
+                     })
+  end
+  
+  it 'should throw exception with disconnecting to database' do
+    lambda{ get('/4.0/ads?output=xml&ll=-122.44932,+37.766983') }.should \
+    raise_error(MysqlError)
+  end
+
+  it 'should be responsed 500' do
+    pending
+    lambda { get('/4.0/ads?output=xml&ll=-122.44932,+37.766983') }.should \
+      raise_error(Merb::ControllerExceptions::InternalServerError)
+  end
+
+  after(:each) do
+    DataMapper.setup(:default, {
+                       :adapter => 'mysql',
+                       :database => 'intl_prototype',
+                       :username => 'adlocal',
+                       :password => 'adlocal',
+                       :host => 'adl-proto-misc01'
+                     })
+  end
+end
+

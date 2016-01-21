@@ -1,0 +1,23 @@
+class Holiday < ActiveRecord::Base
+  belongs_to :user
+  WEEKLY_HOLIDAYS = [6, 0]
+
+  named_scope :user, lambda { |user| { :conditions => { :user_id => user } } }
+  named_scope :recent, lambda { |start_date| { :conditions => ['date > ?', start_date] } }
+  named_scope :range, lambda { |start_date, end_date| { :conditions => { :date => start_date..end_date } } }
+
+  validates_presence_of :date
+  validates_format_of :date, :with => /^\d{4}-\d{2}-\d{2}$/, :message => 'activerecord_error_not_a_date', :allow_nil => false
+  validates_uniqueness_of :date, :scope => :user_id, :message => 'You have already registered with this date.'
+
+  def self.holiday?(date, user = nil)
+    return true if WEEKLY_HOLIDAYS.find {|wday| date.wday == wday }
+
+    return self.find_by_user_and_date(user, date) ? true : false if user
+
+    return self.find_by_date_and_for_all_users(date) ? true : false
+  end
+
+  def hoilday_list(from = nil, to = nil, user = nil)
+  end
+end

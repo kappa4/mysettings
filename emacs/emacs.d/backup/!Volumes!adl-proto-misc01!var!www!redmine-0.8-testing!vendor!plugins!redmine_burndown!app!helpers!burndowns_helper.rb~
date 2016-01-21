@@ -1,0 +1,63 @@
+module BurndownsHelper
+  NUMERIC_FORMAT_SIGNED = '%+.1f'
+  NUMERIC_FORMAT_UNSIGNED = '%.1f'
+  HOURS_POSTFIX = 'hrs'
+
+  # Shows chart plugin menu.
+  def show_users
+    if @member
+      res = [link_to(l(:all_users), show_burndown_path(:project_id => @project.id, :id => @version))]
+    else
+      res = [%Q{<li id="selected">#{l(:all_users)}</li>}]
+    end
+
+    @project.members.sort_by {|member| member.name}.each do |member|
+      if @member and @member.user.id == member.user.id
+        res << %Q{<li id="selected">#{member.name}</li>}
+      else
+        res << %Q{<li>#{link_to(member.name, member_burndown_path(:id => @version, :member_id => member))}</li>}
+      end
+    end
+    res.join
+  end
+
+  def format_number(num, postfix = '')
+    css_class = num < 0 ? 'negative_value' : 'positive_value'
+    %Q{<span class="#{css_class}">#{NUMERIC_FORMAT_SIGNED % num}#{postfix}</span>}
+  end
+
+  def show_relative_error(date = nil)
+    err = @stats.relative_error(date)
+    if err
+      format_number err, '%'
+    else
+      '<span class="nil_value"> --- %</span>'
+    end
+  end
+
+  def show_absolute_error(date = nil)
+    format_number @stats.absolute_error(date), HOURS_POSTFIX
+  end
+
+  def show_remainging_hour
+    (NUMERIC_FORMAT_UNSIGNED % @stats.remaining_hour) + HOURS_POSTFIX
+  end
+
+  def one_week_progress(&block)
+    date_from = Date.today
+    date_from = @stats.end_date if date_from > @stats.end_date
+    date_from = date_from - 1.week + 1.day
+    date_from = @stats.start_date if date_from < @stats.start_date
+
+    start_idx = @stats.dates.index(date_from)
+    @stats.dates[start_idx..start_idx+6].each { |date| yield(date) }
+  end
+
+  def show_add_holiday_path
+    if @member
+      add_holiday_user_path(:project_id => @project, :id => @version, :user_id => @member.user)
+    else
+      add_holiday_all_path(:project_id => @project, :id => @version)
+    end
+  end
+end

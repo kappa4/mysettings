@@ -1,0 +1,6 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =4
+let g:netrw_dirhist_1='/Users/takahashi/Project/AdLocal-Intl/src/adlocal4g/common'
+let g:netrw_dirhist_2='/Users/takahashi/Project/AdLocal-Intl/src/adlocal4g/common/lib'
+let g:netrw_dirhist_3='/Users/takahashi/Project/AdLocal-Intl/src/adlocal4g/common/lib/data_mapper'
+let g:netrw_dirhist_4='/Users/takahashi/Project/AdLocal-Intl/src/adlocal4g/common/lib/data_mapper/dm-validations'

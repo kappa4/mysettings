@@ -1,0 +1,20 @@
+class ScrumStatisticsWorker < BackgrounDRb::MetaWorker
+  set_worker_name :scrum_statistics_worker
+  def create(args = nil)
+    # this method is called, when worker is loaded for the first time
+  end
+
+  def update_stats(arg = nil)
+    Version.find(:all, :conditions => ["effective_date >= ?", Date.today]).each do |version|
+      all = Statistics.new(version).calculate
+      cache[Statistics.cache_name(version, nil)] = all
+      ScrumMemberAttribute.find(:all, :conditions => { :is_issue_resolver=>true }).each do |attr|
+        member = Member.find_by_member_id(attr.member_id)
+        individual = Statistics.new(version, member)
+        individual.all_issues = all.all_issues
+        cahce[Statistics.cache_name(version, member)] = individual.calculate
+      end
+    end
+  end
+end
+

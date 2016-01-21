@@ -1,0 +1,13 @@
+class Exceptions < Application
+
+  def mysql_error
+    logging
+    #raise ServerError::ServiceUnavailable
+    #render
+  end
+
+  private
+  def logging
+    Logger.error("Exception occurred: " + request.exceptions[0].message)
+  end
+end

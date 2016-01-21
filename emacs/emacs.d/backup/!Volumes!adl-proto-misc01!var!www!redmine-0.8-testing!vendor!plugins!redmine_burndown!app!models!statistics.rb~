@@ -1,0 +1,241 @@
+class Statistics
+  attr_accessor :dates, :start_date, :end_date
+
+  MAX_NUM_OF_DEVELOPER = 5.0
+
+  def initialize(version, member = nil)
+    @version = version
+    @start_date = version.created_on.to_date
+    end_date = version.effective_date
+    @end_date = end_date ? end_date.to_date : @start_date.next_week.next_week(:friday)
+    @dates = (@start_date..@end_date).inject([]) { |accum, date| accum << date }
+    @member = member
+  end
+
+
+  def all_issues
+    return @all_issues if @all_issues
+
+    # Calculate base date
+    base = Date.today > @end_date ? @end_date : Date.today
+
+    project_issues = @version.project.issues.find(:all,
+                                                  :include => [{:journals => :details}, :relations_from, :relations_to])
+
+
+=begin
+
+== 集計対象の Issue の選択方法
+
+ 1. fixed_version_id の変更が base date 以前にある場合は、
+    base date 以前で最後の fixed_version_id を採用
+ 2. fixed_version_id の変更が base date のあとに初めて行われていた場合は、
+    base date 直後の fixed_version_id の変更前の値を採用
+ 3. 一度も変更されていない場合は、もとの fixed_version_id を採用
+
+ これにより、最終日を超えたあとに fixed_version_id を変更すると、
+ 元に戻しても集計対象とならない
+
+=end
+
+    @all_issues = project_issues.map do |issue|
+      version_change_details = issue.journals.map(&:details).flatten.select { |detail|
+        'fixed_version_id' == detail.prop_key
+      }
+
+      details_today_or_earlier = version_change_details.select { |detail|
+        detail.journal.created_on.to_date <= base
+      }
+
+      last_version_change = details_today_or_earlier.sort_by { |detail| detail.journal.created_on }.last
+
+      # 基準日前に fixed_version_id が変更されている Issue の判定
+      if last_version_change and last_version_change.value.to_i == @version.id
+        next issue
+      end
+
+      # 基準日前に一度も fixed_version_id が変わってないが、
+      # 基準日後に初めて変更された issue の判定
+      first_version_change_after_base = version_change_details.select { |detail|
+        detail.journal.created_on.to_date > base
+      }.sort_by { |detail| detail.journal.created_on }.first
+
+      if first_version_change_after_base and first_version_change_after_base.old_value.to_i == @version.id
+         next issue
+      end
+
+      if issue.fixed_version_id == @version.id
+        next issue
+      else
+        next nil
+      end
+    end.compact
+
+    if @member
+      @all_issues = @all_issues.select {|issue| issue.assigned_to_id == @member.user.id}
+    end
+    @all_issues
+  end
+
+  def total_hour
+    @total_hour ||= all_issues.inject(0) do |total_estimate_hours, issue|
+      total_estimate_hours + hours_left_on_date(@start_date, issue) {|a| a.journal.created_on.to_date < @start_date }
+    end
+  end
+
+  def all_ideal_hours
+    @all_ideal_hours ||= compute_ideal_hours
+  end
+
+  def ideal_hour(date = nil)
+    @all_ideal_hours ||= compute_ideal_hours
+    if date
+      @all_ideal_hours[date].to_f
+    else
+      @all_ideal_hours.sort.last[1].to_f
+    end
+  end
+
+  def all_remaining_hours
+    @all_remaining_hours ||= compute_remaining_hours
+  end
+
+  def remaining_hour(date = nil)
+    @all_remaining_hours ||= compute_remaining_hours
+    if date
+      @all_remaining_hours[date].to_f
+    else
+      @all_remaining_hours.sort.last[1].to_f
+    end
+  end
+
+  def absolute_error(date = nil)
+    if date
+      date = @end_date if date > @end_date
+      ideal_hour(date) - remaining_hour(date)
+    else
+      -remaining_hour
+    end
+  end
+
+  def relative_error(date = nil)
+    if date
+      date = @end_date if date > @end_date
+      date != @end_date ? (absolute_error(date) / ideal_hour(date)) * 100 : nil
+    else
+      total_hour > 0.0 ? ((total_hour + absolute_error) / total_hour) * 100 - 100 : nil
+    end
+  end
+
+
+  def total_num_of_worker
+    @dates.inject(0) do |workers, date|
+      workers + num_of_worker_by_date(date)
+    end
+  end
+
+
+  private
+  def num_of_developer
+    @member ? 1.0 : MAX_NUM_OF_DEVELOPER
+  end
+
+  def max_velocity
+    num_of_developer * total_hour.to_f / total_num_of_worker
+  end
+
+  def num_of_worker_by_date(date)
+    num_of_developer - num_of_absentee_by_date(date)
+  end
+
+  def holidays(date)
+    if @member
+      holiday = Holiday.find_by_user_id_and_date(@member.user.id, date)
+      holiday ? [holiday] : []
+    else
+      list = Holiday.find(:all, :conditions => { :date => date, :for_all_users => false })
+      list ? list : []
+    end
+  end
+
+  def num_of_absentee_by_date(date)
+    return num_of_developer if Holiday.total_holiday?(date)
+    return num_of_developer / 2 if Holiday.half_holiday?(date)
+
+    @num_of_absentee ||= { }
+    if @num_of_absentee[date]
+      @num_of_absentee[date]
+    else
+      if @member
+      end
+
+      @num_of_absentee[date] = holidays(date).inject(0) do |num, holiday|
+        if holiday.is_half?
+          num + 0.5
+        else
+          num + 1
+        end
+      end
+    end
+  end
+
+  def expected_progress_per_day(date)
+    num_of_worker_by_date(date) / num_of_developer * max_velocity
+  end
+
+  def compute_ideal_hours
+    # ideal_hours should be consisted without holiday
+    expected_left_hours = total_hour
+    ideal_hours = { }
+    @dates.each do |date|
+      expected_left_hours -= expected_progress_per_day(date)
+      ideal_hours[date] = expected_left_hours
+    end
+    ideal_hours
+  end
+
+  def compute_remaining_hours
+    remaining_hours = { }
+    @dates.each do |date|
+      issues = all_issues.select {|issue| issue.created_on.to_date <= date }
+      total_hours_left = issues.inject(0) do |total_hours_left, issue|
+        total_hours_left += hours_left_on_date(date, issue) {|a| a.journal.created_on.to_date <= date }
+      end
+      remaining_hours[date] = total_hours_left
+    end
+    remaining_hours
+  end
+
+
+  def hours_left_on_date(date, issue, &is_changed_before_the_date)
+    status_change_details = issue.journals.map(&:details).flatten.select { |detail|
+      'status_id' == detail.prop_key
+    }
+    last_status_change = status_change_details.sort_by { |a| a.journal.created_on }.last
+
+    # If the issue was closed on 'date',
+    # total_hours_left didn't update.
+    if last_status_change and
+      is_changed_before_the_date.call(last_status_change) and
+      IssueStatus.find(last_status_change.value).is_closed?
+
+      return 0
+    end
+
+    done_ratio_details = issue.journals.map(&:details).flatten.select {|detail| 'done_ratio' == detail.prop_key }
+    details_today_or_earlier = done_ratio_details.select(&is_changed_before_the_date)
+
+    last_done_ratio_change = details_today_or_earlier.sort_by {|a| a.journal.created_on }.last
+
+    ratio = if last_done_ratio_change
+      # done_ratio was already updated by 'date'
+      last_done_ratio_change.value.to_f
+    elsif done_ratio_details.size > 0
+      # done_ratio is NOT updated yet by 'date'
+      0.0
+    else
+      issue.done_ratio.to_f
+    end
+    issue.estimated_hours.to_f * (100.0-ratio)/100
+  end
+end

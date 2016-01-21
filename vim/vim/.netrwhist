@@ -1,0 +1,8 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =6
+let g:netrw_dirhist_1='/usr/local/lib/ruby/gems/1.8/gems/thin-1.2.7/lib'
+let g:netrw_dirhist_2='/usr/local/lib/ruby/gems/1.8/gems/thin-1.2.7/lib/thin'
+let g:netrw_dirhist_3='/usr/local/lib/ruby/gems/1.8/gems/thin-1.2.7/lib/thin/controllers'
+let g:netrw_dirhist_4='/usr/local/lib/ruby/gems/1.8/gems/thin-1.2.7/lib'
+let g:netrw_dirhist_5='/usr/local/lib/ruby/gems/1.8/gems/thin-1.2.7'
+let g:netrw_dirhist_6='/usr/local/lib/ruby/gems/1.8/gems/thin-1.2.7/bin'

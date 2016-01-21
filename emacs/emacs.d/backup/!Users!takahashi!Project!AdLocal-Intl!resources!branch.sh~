@@ -1,0 +1,33 @@
+#!/bin/bash
+
+SVNROOT=$1
+BRANCH=$2
+
+# Paths
+DLV_BRANCH=$SVNROOT/dlv/$BRANCH
+ADM_BRANCH=$SVNROOT/adm/$BRANCH
+CMN_LIB_BRANCH=$SVNROOT/common/lib/$BRANCH
+CMN_MDL_BRANCH=$SVNROOT/common/models/app/$BRANCH
+CMN_SPC_MDL_BRANCH=$SVNROOT/common/models/trunk/spec/$BRANCH
+CMN_SPC_SLN_BRANCH=$SVNROOT/common/spec/helpers/$BRANCH
+
+
+# dlv
+svn cp $SVNROOT/dlv/trunk $DLV_BRANCH
+
+# adm
+svn cp $SVNROOT/adm/trunk $ADM_BRANCH
+
+# common
+svn cp $SVNROOT/common/lib/trunk $CMN_LIB_BRANCH
+svn cp $SVNROOT/common/models/trunk $CMN_MDL_BRANCH
+svn cp $SVNROOT/common/spec/helpers/trunk $CMN_SPC_BRANCH
+
+# change svn:externals
+svn ps svn:externals \'models $CMN_MDL_BRANCH\' $DLV_BRANCH/app
+svn ps svn:externals \'models $CMN_MDL_BRANCH\' $ADM_BRANCH/app
+svn ps svn:externals \'models https://svn.cirius.co.jp/svn/adlocal4g/intl/common/models/trunk/spec
+svn ps svn:externals \'lib https://svn.cirius.co.jp/svn/adlocal4g/$CMN_LIB_BRANCH\' $DLV_BRANCH
+svn ps svn:externals \'lib https://svn.cirius.co.jp/svn/adlocal4g/$CMN_LIB_BRANCH\' $ADM_BRANCH
+svn ps svn:externals \'selenium-rc https://svn.cirius.co.jp/svn/adlocal4g/intl/$CMN_SPC_BRANCH/selenium-rc\' $DLV_BRANCH/spec/helpers
+svn ps svn:externals \'selenium-rc https://svn.cirius.co.jp/svn/adlocal4g/intl/$CMN_SPC_BRANCH/selenium-rc\' $DLV_BRANCH/spec/helpers

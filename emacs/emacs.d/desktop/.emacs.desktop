@@ -1,0 +1,39 @@
+;; -*- mode: emacs-lisp; coding: emacs-mule; -*-
+;; --------------------------------------------------------------------------
+;; Desktop File for Emacs
+;; --------------------------------------------------------------------------
+;; Created Wed Aug 27 13:04:56 2008
+;; Desktop file format version 206
+;; Emacs version 22.2.50.1
+
+;; Global section:
+(setq desktop-missing-file-warning nil)
+(setq tags-file-name nil)
+(setq tags-table-list nil)
+(setq search-ring '("arpha"))
+(setq regexp-search-ring nil)
+(setq register-alist nil)
+
+;; Buffer section -- buffers listed in same order as in buffer list:
+(desktop-create-buffer 206
+  "/Users/takahashi/.emacs.desktop"
+  ".emacs.desktop"
+  'emacs-lisp-mode
+  nil
+  1
+  '(nil nil)
+  nil
+  nil
+  '((buffer-file-coding-system . emacs-mule-unix)))
+
+(desktop-create-buffer 206
+  "/Users/takahashi/.emacs"
+  ".emacs"
+  'emacs-lisp-mode
+  nil
+  2086
+  '(277 t)
+  nil
+  nil
+  '((buffer-file-coding-system . mule-utf-8-unix)))
+

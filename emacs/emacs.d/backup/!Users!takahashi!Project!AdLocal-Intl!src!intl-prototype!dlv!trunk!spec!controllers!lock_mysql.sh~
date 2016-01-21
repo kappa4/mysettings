@@ -1,0 +1,3 @@
+#!/bin/bash
+
+echo 'LOCK TABLES '$4' WRITE; SELECT('$5'); UNLOCK TABLES;' | mysql -u$1 -p$2 $3

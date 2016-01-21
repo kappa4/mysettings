@@ -1,0 +1,71 @@
+set number
+set expandtab
+set tabstop=4
+set shiftwidth=4
+set softtabstop=4
+set autoindent
+set ruler
+set cursorline
+
+set encoding=utf-8
+set fileencoding=utf-8
+set fileencodings=utf-8,iso-2022-jp,euc-jp,cp932
+
+set nocompatible
+syntax on
+filetype on
+filetype indent on
+filetype plugin on
+
+" set list
+" set listchars=tab:^¥ ,eol:$
+
+set backspace=1
+
+nnoremap <Space>. :<C-u>edit $MYVIMRC<Enter>
+nnoremap <Space>s. :<C-u>source $MYVIMRC<Enter>
+nnoremap <C-h> :<C-u>help<Space>
+nnoremap <C-h><C-h> :<C-u>help <C-r><C-w><Enter>
+
+inoremap <expr> ,df strftime('%Y-%m-%dT%H:%M:%S')
+inoremap <expr> ,dd strftime('%Y-%m-%d')
+inoremap <expr> ,dt strftime('%H:%M:%S')
+
+nnoremap gc `[v`]
+vnoremap gc <C-u>normal gc<Enter>
+vnoremap gc <C-u>normal gc<Enter>
+
+if has('mac') && !has('gui')
+    " Vim(Mac)
+    nnoremap <silent> <Space>y :.w !pbcopy<Enter><Enter>
+    vnoremap <silent> <Space>y :w !pbcopy<Enter><Enter>
+    nnoremap <silent> <Space>p :r !pbpaste<Enter>
+    vnoremap <silent> <Space>p :r !pbpaste<Enter>
+else
+    " GVim(Mac & Win)
+    noremap <Space>y "+y
+    noremap <Space>d "+d
+    noremap <Space>ay :<C-u>%y +<Enter>
+    noremap <Space>ad :<C-u>%d +<Enter>
+    noremap <Space>p "+p
+endif
+
+" for rails.vim
+let g:rails_expensive=1
+let g:rails_default_file='config/database.yml'
+let g:rails_tabstop=4
+let g:rails_gnu_screen=1
+
+" automatically remove all trailing whitespace
+autocmd BufWritePre * :%s/\s\+$//e
+
+if has('gui_macvim')
+    set showtabline=2   " タブを常に表示
+    set imdisable   " IMを無効化
+    set transparency=10 " 透明度を指定
+    set antialias
+    set guifont=Monaco:h14
+    set background=dark
+    colorscheme darkblue
+endif
+
